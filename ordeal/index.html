@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ordeal — AMRAP Round Tracker</title>
+  <meta name="description" content="Dead simple AMRAP round tracker for iOS. Tap to count rounds within the time limit. No subscription, no ads, no account. Every dollar supports Bo Meier's TBI recovery." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=DM+Mono&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0e0e0e;
+      --surface: #161616;
+      --surface2: #1c1c1c;
+      --border: #2a2a2a;
+      --chalk: #e8e0d0;
+      --chalk-dim: #9a9080;
+      --chalk-faint: #4a4540;
+      --accent: #c8a84a;
+      --accent-dim: #5c4a18;
+      --accent-glow: rgba(200,168,74,0.12);
+      --font-display: 'Cinzel', serif;
+      --font-mono: 'DM Mono', monospace;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--chalk);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: rgba(14,14,14,0.95);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+    }
+
+    .nav-logo {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--chalk-dim);
+      text-decoration: none;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .nav-logo span {
+      color: var(--accent);
+    }
+
+    .nav-cta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: .1em;
+      border: 1px solid var(--accent-dim);
+      padding: 8px 16px;
+      transition: background .2s, color .2s;
+    }
+
+    .nav-cta:hover {
+      background: var(--accent-glow);
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 80px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(200,168,74,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      width: 32px;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: clamp(3.5rem, 10vw, 7rem);
+      color: var(--chalk);
+      line-height: .95;
+      letter-spacing: .04em;
+      margin-bottom: 32px;
+      max-width: 700px;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-size: 1.1rem;
+      color: var(--chalk-dim);
+      line-height: 1.7;
+      max-width: 480px;
+      margin-bottom: 48px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--accent);
+      color: #0e0e0e;
+      font-family: var(--font-display);
+      font-size: .85rem;
+      letter-spacing: .1em;
+      padding: 16px 32px;
+      text-decoration: none;
+      transition: opacity .2s;
+      font-weight: 700;
+    }
+
+    .btn-primary:hover { opacity: .85; }
+
+    .btn-secondary {
+      font-family: var(--font-mono);
+      font-size: .7rem;
+      color: var(--chalk-dim);
+      text-decoration: none;
+      letter-spacing: .1em;
+      border-bottom: 1px solid var(--chalk-faint);
+      padding-bottom: 2px;
+      transition: color .2s, border-color .2s;
+    }
+
+    .btn-secondary:hover {
+      color: var(--chalk);
+      border-color: var(--chalk-dim);
+    }
+
+    .hero-price {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      color: var(--chalk-faint);
+      letter-spacing: .15em;
+      margin-top: 16px;
+    }
+
+    /* DIVIDER */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* FEATURES */
+    .features {
+      padding: 80px 40px;
+      max-width: 900px;
+    }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--chalk-faint);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: 48px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .feature {
+      background: var(--bg);
+      padding: 32px 28px;
+      transition: background .2s;
+    }
+
+    .feature:hover {
+      background: var(--surface);
+    }
+
+    .feature-icon {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .feature h3 {
+      font-family: var(--font-mono);
+      font-size: .7rem;
+      color: var(--chalk);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .feature p {
+      font-size: .85rem;
+      color: var(--chalk-dim);
+      line-height: 1.65;
+    }
+
+    /* WORKOUTS */
+    .workouts {
+      padding: 80px 40px;
+      border-top: 1px solid var(--border);
+    }
+
+    .workouts-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 32px;
+      max-width: 600px;
+    }
+
+    .workout-tag {
+      font-family: var(--font-display);
+      font-size: .75rem;
+      color: var(--chalk-dim);
+      border: 1px solid var(--border);
+      padding: 10px 20px;
+      letter-spacing: .08em;
+      transition: border-color .2s, color .2s;
+    }
+
+    .workout-tag:hover {
+      border-color: var(--accent-dim);
+      color: var(--chalk);
+    }
+
+    .workout-tag.custom {
+      border-style: dashed;
+      color: var(--chalk-faint);
+    }
+
+    /* BO SECTION */
+    .bo-section {
+      padding: 80px 40px;
+      border-top: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bo-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+
+    .bo-card {
+      background: var(--surface);
+      border: 1px solid var(--accent-dim);
+      padding: 48px;
+      max-width: 680px;
+      position: relative;
+    }
+
+    .bo-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .bo-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .bo-card h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      color: var(--chalk);
+      margin-bottom: 20px;
+      letter-spacing: .04em;
+      line-height: 1.2;
+    }
+
+    .bo-card p {
+      font-size: .95rem;
+      color: var(--chalk-dim);
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+
+    .bo-links {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .bo-link {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity .2s;
+    }
+
+    .bo-link:hover { opacity: .7; }
+
+    /* TRANSPARENCY */
+    .transparency {
+      padding: 80px 40px;
+      border-top: 1px solid var(--border);
+    }
+
+    .transparency-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 40px;
+      max-width: 520px;
+    }
+
+    .transparency-card h3 {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      color: var(--chalk-faint);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-row:last-of-type {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      color: var(--chalk-dim);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: var(--accent);
+      letter-spacing: .04em;
+    }
+
+    .stat-date {
+      font-family: var(--font-mono);
+      font-size: .6rem;
+      color: var(--chalk-faint);
+      letter-spacing: .08em;
+      margin-top: 4px;
+    }
+
+    .transparency-note {
+      font-family: var(--font-mono);
+      font-size: .6rem;
+      color: var(--chalk-faint);
+      letter-spacing: .08em;
+      line-height: 1.7;
+      margin-top: 24px;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    footer p {
+      font-family: var(--font-mono);
+      font-size: .6rem;
+      color: var(--chalk-faint);
+      letter-spacing: .08em;
+    }
+
+    footer a {
+      color: var(--chalk-dim);
+      text-decoration: none;
+    }
+
+    footer a:hover { color: var(--chalk); }
+
+    @media (max-width: 600px) {
+      nav, .hero, .features, .workouts, .bo-section, .transparency, footer {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+      h1 { font-size: 3rem; }
+      .bo-card { padding: 28px; }
+      .transparency-card { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-logo" href="/">DIGI<span>WIRX</span> / ORDEAL</a>
+    <a class="nav-cta" href="#download">GET ORDEAL</a>
+  </nav>
+
+  <section class="hero">
+    <p class="hero-eyebrow">iOS · Health &amp; Fitness</p>
+    <h1>YOU<br>CHOSE<br><em>THIS.</em></h1>
+    <p class="hero-sub">Dead simple AMRAP round tracker. Tap to count rounds within the time limit. No subscription, no ads, no account. Just your workout.</p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="#download" id="download">
+        ↓ APP STORE
+      </a>
+      <a class="btn-secondary" href="#bo">Read Bo's story →</a>
+    </div>
+    <p class="hero-price">$2.99 · ONE TIME · NO SUBSCRIPTION · EVER</p>
+  </section>
+
+  <hr class="divider" />
+
+  <section class="features">
+    <p class="section-label">// What it does</p>
+    <div class="features-grid">
+      <div class="feature">
+        <span class="feature-icon">⊙</span>
+        <h3>Count Rounds</h3>
+        <p>Tap anywhere to count a completed round. Big target, impossible to miss when you're gassed.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">◷</span>
+        <h3>Track Time</h3>
+        <p>Elapsed timer runs from the moment you begin. See your pace. Chase your PR.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">◈</span>
+        <h3>Build Custom AMRAPs</h3>
+        <p>Any exercises, any rep scheme, any time domain. Save it and run it again.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">◎</span>
+        <h3>History &amp; PRs</h3>
+        <p>Every workout logged locally on your device. See your streak, your favorite WOD, your best rounds.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">⊘</span>
+        <h3>No Gimmicks</h3>
+        <p>No subscription. No ads. No account. No tracking. Your data never leaves your phone.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">◐</span>
+        <h3>AMRAP + EMOM</h3>
+        <p>5 pre-loaded benchmark workouts including Cindy, Chelsea, Mary, Nate, and Daniela.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="workouts">
+    <p class="section-label">// Pre-loaded benchmarks</p>
+    <div class="workouts-list">
+      <span class="workout-tag">Cindy · AMRAP 20</span>
+      <span class="workout-tag">Chelsea · EMOM 30</span>
+      <span class="workout-tag">Mary · AMRAP 20</span>
+      <span class="workout-tag">Nate · AMRAP 20</span>
+      <span class="workout-tag">Daniela · AMRAP 20</span>
+      <span class="workout-tag custom">+ Your custom WODs</span>
+    </div>
+  </section>
+
+  <section class="bo-section" id="bo">
+    <div class="bo-card">
+      <p class="bo-label">Why Ordeal exists</p>
+      <h2>Every dollar goes to Bo.</h2>
+      <p>My nephew Bo Meier is a 20-year-old student athlete who suffered a severe traumatic brain injury in May 2025. He needs 24/7 care for the foreseeable future, and the costs his family faces go far beyond what insurance covers.</p>
+      <p>I built Ordeal because I needed it, and because $2.99 from the fitness community adds up to something real. No platform fees. No middleman. Proceeds go directly to Bo's family.</p>
+      <p>Follow his recovery. Share his story. Every download helps.</p>
+      <div class="bo-links">
+        <a class="bo-link" href="https://www.instagram.com/bolieve_boknows" target="_blank">
+          ↗ @bolieve_boknows
+        </a>
+        <a class="bo-link" href="https://www.caringbridge.org/site/a809b3a0-2ec4-11f0-a76e-a5c0b61b6790" target="_blank">
+          ↗ CaringBridge
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="transparency">
+    <p class="section-label">// Transparency</p>
+    <div class="transparency-card">
+      <h3>Ordeal for Bo — Fund Tracker</h3>
+      <div class="stat-row">
+        <div>
+          <p class="stat-label">Total Raised</p>
+          <p class="stat-date">Since launch</p>
+        </div>
+        <div style="text-align:right">
+          <p class="stat-value">$0</p>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div>
+          <p class="stat-label">Transferred to Family</p>
+          <p class="stat-date">Last updated: —</p>
+        </div>
+        <div style="text-align:right">
+          <p class="stat-value">$0</p>
+        </div>
+      </div>
+      <p class="transparency-note">
+        Updated quarterly. App Store earnings reports available on request.<br>
+        Questions: mike@digiwirx.com
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 DigiWirx LLC</p>
+    <p>
+      <a href="/ordeal/privacy">Privacy Policy</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:mike@digiwirx.com">Contact</a>
+      &nbsp;·&nbsp;
+      <a href="/">DigiWirx</a>
+    </p>
+  </footer>
+
+</body>
+</html>
